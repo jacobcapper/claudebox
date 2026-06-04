@@ -4,6 +4,11 @@ Real-time Claude Code rate-limit monitor for the **GeekMagic SmallTV Ultra** (ES
 
 Displays your 5-hour and 7-day usage windows with progress bars and reset countdowns, polling the Anthropic API on a configurable interval.
 
+<p align="center">
+  <img src="docs/photo1.jpg" width="45%" alt="ClaudeBox showing usage stats">
+  <img src="docs/photo2.jpg" width="45%" alt="ClaudeBox front view">
+</p>
+
 ## Attribution
 
 Ported from [claude-usage-stick](https://github.com/oauramos/claude-usage-stick) by [@oauramos](https://github.com/oauramos), which targets ESP32-based devices (M5StickC Plus, M5StickC Plus2, LilyGo T-Display S3).
