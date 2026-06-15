@@ -45,16 +45,21 @@ bool fetchUsage(const char* token, UsageData& out) {
     https.addHeader("User-Agent", "claude-code/2.1.5");
     https.collectHeaders(RL_HEADERS, RL_HEADER_COUNT);
 
+    // Claude Code OAuth tokens are only accepted when the request is shaped like
+    // Claude Code — the system prompt MUST start with this exact string, or the
+    // API returns 401 even for a valid token.
     String body = "{\"model\":\"" PROBE_MODEL "\","
                   "\"max_tokens\":1,"
+                  "\"system\":\"You are Claude Code, Anthropic's official CLI for Claude.\","
                   "\"messages\":[{\"role\":\"user\",\"content\":\".\"}]}";
 
     Serial.printf("[API] POST %s\n", MESSAGES_ENDPOINT);
     int code = https.POST(body);
-    Serial.printf("[API] HTTP %d\n", code);
+    Serial.printf("[API] HTTP %d  (token len=%u prefix=%.13s)\n",
+                  code, (unsigned)strlen(token), token);
 
     if (code <= 0) {
-        snprintf(out.error, sizeof(out.error), "http_%d", code);
+        snprintf(out.error, sizeof(out.error), "net_%d", code);
         out.ok = false;
         https.end();
         return false;
@@ -65,20 +70,20 @@ bool fetchUsage(const char* token, UsageData& out) {
     String d7u = https.header("anthropic-ratelimit-unified-7d-utilization");
     String d7r = https.header("anthropic-ratelimit-unified-7d-reset");
 
-    Serial.printf("[API] 5h: %s  7d: %s\n", h5u.c_str(), d7u.c_str());
-    Serial.printf("[API] 5h_reset: %s  7d_reset: %s\n", h5r.c_str(), d7r.c_str());
-
-    https.end();
-
-    if (h5u.length() == 0 && d7u.length() == 0) {
-        if (code == 401) {
-            strlcpy(out.error, "auth_failed", sizeof(out.error));
-        } else {
-            snprintf(out.error, sizeof(out.error), "no_headers_%d", code);
-        }
+    // Non-200 or no rate-limit headers: capture the API error body so the real
+    // reason is visible on screen and serial, instead of a vague "auth_failed".
+    if (code != 200 || (h5u.length() == 0 && d7u.length() == 0)) {
+        String resp = https.getString();
+        https.end();
+        Serial.printf("[API] error %d body: %s\n", code, resp.c_str());
+        snprintf(out.error, sizeof(out.error), "%d:%.55s", code, resp.c_str());
         out.ok = false;
         return false;
     }
+
+    Serial.printf("[API] 5h: %s  7d: %s\n", h5u.c_str(), d7u.c_str());
+    Serial.printf("[API] 5h_reset: %s  7d_reset: %s\n", h5r.c_str(), d7r.c_str());
+    https.end();
 
     out.h5 = h5u.toFloat() * 100.0f;
     out.d7 = d7u.toFloat() * 100.0f;
