@@ -1,6 +1,6 @@
 # Claude Usage Monitor — GeekMagic SmallTV Ultra
 
-Real-time Claude Code rate-limit monitor for the **GeekMagic SmallTV Ultra** (ESP8266 + ST7789 240×240 display).
+Real-time Claude Code rate-limit monitor for the **GeekMagic SmallTV Ultra** (ESP8266, 4 MB flash + ST7789 240×240 display).
 
 Displays your 5-hour and 7-day usage windows with progress bars and reset countdowns, polling the Anthropic API on a configurable interval.
 
@@ -18,7 +18,7 @@ The API communication approach, captive portal design, and overall architecture 
 ## Hardware
 
 **GeekMagic SmallTV Ultra**
-- ESP8266 (1 MB flash)
+- ESP8266 (4 MB flash)
 - ST7789 240×240 IPS display
 - USB powered (no battery)
 - No user buttons
