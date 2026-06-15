@@ -219,6 +219,7 @@ static void handleProvision() {
     String ssid      = webServer.arg("ssid");
     String wifipass  = webServer.arg("wifipass");
     String token     = webServer.arg("token");
+    token.trim();
     String pollStr   = webServer.arg("poll_sec");
     String brightStr = webServer.arg("brightness");
     String rotStr    = webServer.arg("rotation");

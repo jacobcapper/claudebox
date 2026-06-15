@@ -38,7 +38,11 @@ bool fetchUsage(const char* token, UsageData& out) {
         return false;
     }
 
-    https.addHeader("Authorization", String("Bearer ") + token);
+    // Defensively strip any stray whitespace (e.g. a pasted leading space) so
+    // the bearer value is valid even for tokens already saved before trimming.
+    String bearer = token;
+    bearer.trim();
+    https.addHeader("Authorization", String("Bearer ") + bearer);
     https.addHeader("anthropic-version", ANTHROPIC_VERSION);
     https.addHeader("anthropic-beta", "oauth-2025-04-20");
     https.addHeader("content-type", "application/json");

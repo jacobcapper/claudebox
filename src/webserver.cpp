@@ -173,6 +173,7 @@ static void handleRotate() {
 // re-encrypt the new token, keep the rest of the config, save and reboot.
 static void handleToken() {
     String token = srv.arg("token");
+    token.trim();
     if (token.isEmpty())       { srv.send(400, "text/plain", "Empty token"); return; }
     if (token.length() > 255)  { srv.send(400, "text/plain", "Token too long (max 255)"); return; }
 
