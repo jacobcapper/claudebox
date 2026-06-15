@@ -19,14 +19,6 @@ Ported from [claude-usage-stick](https://github.com/oauramos/claude-usage-stick)
 
 The API communication approach, captive portal design, and overall architecture come from the original project.
 
-## Hardware
-
-**GeekMagic SmallTV Ultra**
-- ESP8266 (4 MB flash)
-- ST7789 240×240 IPS display
-- USB powered (no battery)
-- No user buttons
-
 ## How It Works
 
 1. Sends a minimal `max_tokens: 1` request to the Anthropic Messages API using your OAuth token
@@ -80,7 +72,15 @@ On first boot the device creates an open WiFi AP named `ClaudeMonitor-XXXX`.
 1. Connect to it (no password)
 2. Open `http://192.168.4.1` in a browser
 3. Enter your WiFi credentials and OAuth token
-4. Hit **Save & Reboot**
+4. Pick refresh interval, brightness, and **screen rotation**
+5. Hit **Save & Reboot**
+
+### Updating the token
+
+OAuth tokens from `claude setup-token` expire after a year. When yours does,
+you don't need to factory reset — open the device's dashboard at
+`http://<device-ip>/` and use the **Update Token** box. It re-encrypts the new
+token, keeps your WiFi/preferences, and reboots.
 
 ### Future updates (OTA)
 
@@ -106,7 +106,7 @@ While the device is on your network:
 http://<device-ip>/reset
 ```
 
-This wipes EEPROM and reboots into setup AP mode.
+This wipes the stored config and reboots into setup AP mode.
 
 ## Key differences from the original
 

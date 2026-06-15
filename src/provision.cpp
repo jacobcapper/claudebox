@@ -172,6 +172,16 @@ static const char SETUP_HTML[] PROGMEM = R"rawhtml(<!DOCTYPE html>
     </div>
 
     <div class="field">
+      <label for="rotation">Screen rotation</label>
+      <select id="rotation" name="rotation">
+        <option value="0" selected>Portrait</option>
+        <option value="1">Landscape</option>
+        <option value="2">Portrait (flipped)</option>
+        <option value="3">Landscape (flipped)</option>
+      </select>
+    </div>
+
+    <div class="field">
       <label for="device_name">Device label</label>
       <input id="device_name" name="device_name" maxlength="32"
              placeholder="Claude Monitor" autocomplete="off">
@@ -211,6 +221,7 @@ static void handleProvision() {
     String token     = webServer.arg("token");
     String pollStr   = webServer.arg("poll_sec");
     String brightStr = webServer.arg("brightness");
+    String rotStr    = webServer.arg("rotation");
     String nameStr   = webServer.arg("device_name");
 
     if (ssid.isEmpty() || token.isEmpty()) {
@@ -236,6 +247,7 @@ static void handleProvision() {
     cfg.blob = blob;
     cfg.pollSec   = pollStr.isEmpty()   ? DEFAULT_POLL_SEC   : constrain(pollStr.toInt(), MIN_POLL_SEC, MAX_POLL_SEC);
     cfg.brightness = brightStr.isEmpty() ? DEFAULT_BRIGHTNESS : constrain(brightStr.toInt(), 0, 3);
+    cfg.rotation   = rotStr.isEmpty()   ? DEFAULT_ROTATION   : (uint8_t)constrain(rotStr.toInt(), 0, 3);
     if (nameStr.isEmpty()) nameStr = "Claude Monitor";
     strlcpy(cfg.devName, nameStr.c_str(), sizeof(cfg.devName));
     cfg.provisioned = 1;

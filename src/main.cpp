@@ -103,6 +103,7 @@ void setup() {
     }
 
     halSetBrightness((uint8_t)cfg.brightness);
+    lcd.setRotation(cfg.rotation & 0x03);
 
     uiBootProgress(50, "Decrypting token...");
     // MAC is available as soon as WiFi is powered; mode() ensures the driver is up

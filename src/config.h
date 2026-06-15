@@ -25,6 +25,7 @@
 #define SCREEN_ROT              0
 #endif
 #define DEFAULT_BRIGHTNESS      2   // 0=off 1=dim 2=normal 3=bright
+#define DEFAULT_ROTATION        SCREEN_ROT   // TFT_eSPI rotation 0-3
 
 // ── Network ──────────────────────────────────────────────
 #define WIFI_CONNECT_TIMEOUT_S  20
