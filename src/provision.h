@@ -12,6 +12,7 @@ struct StoredConfig {
     int32_t      brightness;
     char         devName[33];
     uint8_t      provisioned;
+    uint8_t      rotation;      // TFT_eSPI setRotation value (0-3)
 };
 
 bool configLoad(StoredConfig& cfg);
