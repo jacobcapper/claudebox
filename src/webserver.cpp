@@ -2,6 +2,7 @@
 #include "provision.h"
 #include "crypto.h"
 #include "ui.h"
+#include "hal.h"
 #include "config.h"
 #include <Arduino.h>
 #if defined(ESP32)
@@ -91,6 +92,7 @@ static const char OTA_HTML[] PROGMEM = R"html(<!DOCTYPE html>
 
 <div class="card">
   <b>Device</b><br>
+  <button onclick="fetch('/rotate',{method:'POST'})">Rotate Screen</button>
   <button class="danger" onclick="if(confirm('Factory reset?'))fetch('/reset')
     .then(()=>document.getElementById('msg').textContent='Resetting...')">
     Factory Reset</button>
@@ -156,6 +158,17 @@ static void handleReset() {
     ESP.restart();
 }
 
+// Cycle screen rotation live (0->1->2->3->0), persist it, and redraw now.
+static void handleRotate() {
+    StoredConfig cfg;
+    if (!configLoad(cfg)) { srv.send(409, "text/plain", "Not provisioned"); return; }
+    cfg.rotation = (cfg.rotation + 1) & 0x03;
+    configSave(cfg);
+    lcd.setRotation(cfg.rotation);
+    if (_usage) uiDashboard(*_usage, millis(), WiFi.RSSI());
+    srv.send(200, "text/plain", String(cfg.rotation).c_str());
+}
+
 // Replace just the OAuth token (e.g. when it expires) without a factory reset:
 // re-encrypt the new token, keep the rest of the config, save and reboot.
 static void handleToken() {
@@ -219,6 +232,7 @@ void webserverBegin(const UsageData* usagePtr) {
     srv.on("/",       HTTP_GET,  handleRoot);
     srv.on("/status", HTTP_GET,  handleStatus);
     srv.on("/reset",  HTTP_GET,  handleReset);
+    srv.on("/rotate", HTTP_POST, handleRotate);
     srv.on("/token",  HTTP_POST, handleToken);
     srv.on("/update", HTTP_POST, handleOtaFinish, handleOtaUpload);
     srv.begin();
