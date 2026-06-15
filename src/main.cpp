@@ -19,8 +19,22 @@
 #include "api.h"
 #include "ui.h"
 #include "webserver.h"
+#if defined(ESP32)
+#include <WiFi.h>
+#else
 #include <ESP8266WiFi.h>
+#endif
 #include <time.h>
+
+// Short unique device id for the setup AP name (ESP8266 chip id has no ESP32
+// equivalent, so derive from the MAC there).
+static uint16_t deviceId() {
+#if defined(ESP32)
+    return (uint16_t)(ESP.getEfuseMac() & 0xFFFF);
+#else
+    return (uint16_t)ESP.getChipId();
+#endif
+}
 
 static StoredConfig cfg;
 static char         token[256];
@@ -79,9 +93,8 @@ void setup() {
         delay(400);
 
         // Generate AP name from chip ID (unique per device)
-        uint32_t chipId = ESP.getChipId();
         char apName[24];
-        snprintf(apName, sizeof(apName), "ClaudeMonitor-%04X", (uint16_t)chipId);
+        snprintf(apName, sizeof(apName), "ClaudeMonitor-%04X", deviceId());
 
         // Open AP — no password needed for the setup portal.
         // Security boundary is the captive portal form itself.
@@ -106,9 +119,8 @@ void setup() {
         uiError("WIFI FAILED", "Returning to setup...");
         delay(3000);
         configClear();
-        uint32_t chipId = ESP.getChipId();
         char apName[24];
-        snprintf(apName, sizeof(apName), "ClaudeMonitor-%04X", (uint16_t)chipId);
+        snprintf(apName, sizeof(apName), "ClaudeMonitor-%04X", deviceId());
         runProvisioningPortal(apName, nullptr);
         return;
     }

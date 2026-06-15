@@ -1,8 +1,14 @@
 #include "api.h"
 #include "config.h"
+#if defined(ESP32)
+#include <WiFi.h>
+#include <HTTPClient.h>
+#include <WiFiClientSecure.h>
+#else
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
 #include <WiFiClientSecureBearSSL.h>
+#endif
 
 static const char* RL_HEADERS[] = {
     "anthropic-ratelimit-unified-5h-utilization",
@@ -16,7 +22,11 @@ bool fetchUsage(const char* token, UsageData& out) {
     // setInsecure() skips server cert validation.
     // Full CA chain verification would need ~30 KB of extra heap, which is
     // tight on ESP8266. The connection is still TLS-encrypted.
+#if defined(ESP32)
+    WiFiClientSecure client;
+#else
     BearSSL::WiFiClientSecure client;
+#endif
     client.setInsecure();
 
     HTTPClient https;

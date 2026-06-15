@@ -3,18 +3,61 @@
 #include "ui.h"
 #include "config.h"
 #include <Arduino.h>
+#include <DNSServer.h>
+#if defined(ESP32)
+#include <WiFi.h>
+#include <WebServer.h>
+#include <Update.h>
+#include <Preferences.h>
+static WebServer webServer(80);
+#else
 #include <EEPROM.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
-#include <DNSServer.h>
 #include <Updater.h>
-
 static ESP8266WebServer webServer(80);
+#endif
 static DNSServer         dnsServer;
 static const byte        DNS_PORT = 53;
 
-// ── EEPROM helpers ─────────────────────────────────────────
+// ESP32's Update class exposes errorString(); ESP8266's Updater getErrorString().
+#if defined(ESP32)
+#define OTA_ERR() Update.errorString()
+#else
+#define OTA_ERR() Update.getErrorString()
+#endif
 
+// ── Persistent config ──────────────────────────────────────
+// ESP8266 uses the EEPROM library; ESP32's EEPROM lib needs a dedicated flash
+// partition the default table lacks, so use NVS (Preferences) there instead.
+
+#if defined(ESP32)
+static const char* NVS_NS  = "claude";
+static const char* NVS_KEY = "cfg";
+
+bool configLoad(StoredConfig& cfg) {
+    Preferences prefs;
+    if (!prefs.begin(NVS_NS, true)) return false;
+    size_t n = prefs.getBytes(NVS_KEY, &cfg, sizeof(cfg));
+    prefs.end();
+    return n == sizeof(cfg) && cfg.magic == EEPROM_MAGIC && cfg.provisioned;
+}
+
+void configSave(const StoredConfig& cfg) {
+    Preferences prefs;
+    prefs.begin(NVS_NS, false);
+    prefs.putBytes(NVS_KEY, &cfg, sizeof(cfg));
+    prefs.end();
+}
+
+void configClear() {
+    Preferences prefs;
+    prefs.begin(NVS_NS, false);
+    prefs.clear();
+    prefs.end();
+}
+
+#else
 bool configLoad(StoredConfig& cfg) {
     EEPROM.begin(EEPROM_SIZE);
     EEPROM.get(0, cfg);
@@ -37,6 +80,7 @@ void configClear() {
     EEPROM.commit();
     EEPROM.end();
 }
+#endif
 
 // ── Captive portal HTML (served from PROGMEM) ──────────────
 
@@ -212,7 +256,7 @@ static void handleReset() {
 
 static void handleOtaFinish() {
     bool ok = !Update.hasError();
-    webServer.send(ok ? 200 : 500, "text/plain", ok ? "OK. Rebooting..." : Update.getErrorString());
+    webServer.send(ok ? 200 : 500, "text/plain", ok ? "OK. Rebooting..." : OTA_ERR());
     delay(500);
     ESP.restart();
 }
@@ -220,8 +264,12 @@ static void handleOtaFinish() {
 static void handleOtaUpload() {
     HTTPUpload& up = webServer.upload();
     if (up.status == UPLOAD_FILE_START) {
+#if defined(ESP32)
+        Update.begin(UPDATE_SIZE_UNKNOWN);
+#else
         uint32_t maxSketch = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
         Update.begin(maxSketch);
+#endif
     } else if (up.status == UPLOAD_FILE_WRITE) {
         Update.write(up.buf, up.currentSize);
     } else if (up.status == UPLOAD_FILE_END) {

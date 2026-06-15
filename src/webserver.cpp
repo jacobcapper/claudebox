@@ -3,10 +3,23 @@
 #include "ui.h"
 #include "config.h"
 #include <Arduino.h>
+#if defined(ESP32)
+#include <WebServer.h>
+#include <Update.h>
+static WebServer srv(80);
+#else
 #include <ESP8266WebServer.h>
 #include <Updater.h>
-
 static ESP8266WebServer srv(80);
+#endif
+
+// ESP32's Update class exposes errorString(); ESP8266's Updater getErrorString().
+#if defined(ESP32)
+#define OTA_ERR() Update.errorString()
+#else
+#define OTA_ERR() Update.getErrorString()
+#endif
+
 static const UsageData* _usage = nullptr;
 
 static const char OTA_HTML[] PROGMEM = R"html(<!DOCTYPE html>
@@ -112,7 +125,7 @@ static void handleReset() {
 
 static void handleOtaFinish() {
     bool ok = !Update.hasError();
-    srv.send(ok ? 200 : 500, "text/plain", ok ? "OK" : Update.getErrorString());
+    srv.send(ok ? 200 : 500, "text/plain", ok ? "OK" : OTA_ERR());
     delay(500);
     ESP.restart();
 }
@@ -121,19 +134,24 @@ static void handleOtaUpload() {
     HTTPUpload& up = srv.upload();
     if (up.status == UPLOAD_FILE_START) {
         Serial.printf("[OTA] Start: %s\n", up.filename.c_str());
+#if defined(ESP32)
+        bool begun = Update.begin(UPDATE_SIZE_UNKNOWN);
+#else
         uint32_t maxSketch = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
-        if (!Update.begin(maxSketch)) {
-            Serial.printf("[OTA] begin error: %s\n", Update.getErrorString());
+        bool begun = Update.begin(maxSketch);
+#endif
+        if (!begun) {
+            Serial.printf("[OTA] begin error: %s\n", OTA_ERR());
         }
     } else if (up.status == UPLOAD_FILE_WRITE) {
         if (Update.write(up.buf, up.currentSize) != up.currentSize) {
-            Serial.printf("[OTA] write error: %s\n", Update.getErrorString());
+            Serial.printf("[OTA] write error: %s\n", OTA_ERR());
         }
     } else if (up.status == UPLOAD_FILE_END) {
         if (Update.end(true)) {
             Serial.printf("[OTA] Success: %u bytes\n", up.totalSize);
         } else {
-            Serial.printf("[OTA] end error: %s\n", Update.getErrorString());
+            Serial.printf("[OTA] end error: %s\n", OTA_ERR());
         }
     }
 }
