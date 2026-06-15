@@ -6,9 +6,17 @@
 // ── Colors (RGB565) ───────────────────────────────────────
 #define C_BG      TFT_BLACK
 #define C_TEXT    TFT_WHITE
+#if defined(BOARD_CYD)
+// The CYD panel crushes dark grays and has narrow viewing angles, so lift the
+// gray ramp for legibility off-axis.
+#define C_DIM     0xC618   // light gray (labels)
+#define C_DARK    0x8410   // medium gray (footnotes)
+#define C_BAR_BG  0x4208   // bar track
+#else
 #define C_DIM     0x7BEF   // mid-gray
 #define C_DARK    0x4A49   // dark gray
 #define C_BAR_BG  0x2104   // very dark gray
+#endif
 #define C_HEAD    0xEB87   // Claude orange
 #define C_ACCENT  0xEB87
 #define C_WARN    0xFD20   // amber
