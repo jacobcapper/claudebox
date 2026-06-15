@@ -19,6 +19,14 @@ Ported from [claude-usage-stick](https://github.com/oauramos/claude-usage-stick)
 
 The API communication approach, captive portal design, and overall architecture come from the original project.
 
+## Hardware
+
+**GeekMagic SmallTV Ultra**
+- ESP8266 (4 MB flash)
+- ST7789 240×240 IPS display
+- USB powered (no battery)
+- No user buttons
+
 ## How It Works
 
 1. Sends a minimal `max_tokens: 1` request to the Anthropic Messages API using your OAuth token
