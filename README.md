@@ -110,16 +110,16 @@ This wipes the stored config and reboots into setup AP mode.
 
 ## Key differences from the original
 
-| | claude-usage-stick | This port |
-|---|---|---|
-| MCU | ESP32 | ESP8266 |
-| Display | 240×135 or 320×170 | 240×240 |
-| TLS | mbedTLS | BearSSL (`setInsecure`) |
-| Crypto library | mbedTLS GCM | rweather/Crypto |
-| Storage | NVS (Preferences) | EEPROM |
-| Token security | PIN-derived AES key | MAC-derived AES key |
-| Buttons | A + B | None |
-| Web server | Setup portal only | Always-on (OTA + status + reset) |
+| | claude-usage-stick | SmallTV Ultra | CYD |
+|---|---|---|---|
+| MCU | ESP32 | ESP8266 | ESP32 |
+| Display | 240×135 or 320×170 | 240×240 ST7789 | 240×320 ST7789 |
+| TLS | mbedTLS | BearSSL (`setInsecure`) | mbedTLS (`setInsecure`) |
+| Crypto library | mbedTLS GCM | rweather/Crypto | rweather/Crypto |
+| Storage | NVS (Preferences) | EEPROM | NVS (Preferences) |
+| Token security | PIN-derived AES key | MAC-derived AES key | MAC-derived AES key |
+| Buttons | A + B | None | None |
+| Web server | Setup portal only | Always-on (status + OTA + token + reset) | Always-on (status + OTA + token + rotate + reset) |
 
 ## License
 
