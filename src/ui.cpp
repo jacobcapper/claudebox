@@ -6,9 +6,17 @@
 // ── Colors (RGB565) ───────────────────────────────────────
 #define C_BG      TFT_BLACK
 #define C_TEXT    TFT_WHITE
+#if defined(BOARD_CYD)
+// The CYD panel crushes dark grays and has narrow viewing angles, so lift the
+// gray ramp for legibility off-axis.
+#define C_DIM     0xC618   // light gray (labels)
+#define C_DARK    0x8410   // medium gray (footnotes)
+#define C_BAR_BG  0x4208   // bar track
+#else
 #define C_DIM     0x7BEF   // mid-gray
 #define C_DARK    0x4A49   // dark gray
 #define C_BAR_BG  0x2104   // very dark gray
+#endif
 #define C_HEAD    0xEB87   // Claude orange
 #define C_ACCENT  0xEB87
 #define C_WARN    0xFD20   // amber
@@ -68,7 +76,7 @@ void uiBootProgress(int percent, const char* label) {
     lcd.setCursor(20, 80);
     lcd.print("Claude Usage");
 
-    int bx = 20, by = 112, bw = SCREEN_W - 40, bh = 16;
+    int bx = 20, by = 112, bw = lcd.width() - 40, bh = 16;
     lcd.fillRect(bx, by, bw, bh, C_BAR_BG);
     int fill = constrain((int)(bw * percent / 100.0f), 0, bw);
     lcd.fillRect(bx, by, fill, bh, C_ACCENT);
@@ -82,7 +90,7 @@ void uiBootProgress(int percent, const char* label) {
 void uiSetupScreen(const char* apName, const char* apPass) {
     lcd.fillScreen(C_BG);
 
-    lcd.fillRect(0, 0, SCREEN_W, 24, C_ACCENT);
+    lcd.fillRect(0, 0, lcd.width(), 24, C_ACCENT);
     lcd.setTextColor(C_BG, C_ACCENT);
     lcd.setTextSize(1);
     lcd.setCursor(8, 8);
@@ -148,9 +156,10 @@ void uiConnecting(const char* ssid, int attempt) {
 
 void uiDashboard(const UsageData& data, unsigned long lastFetchMs, int rssi) {
     lcd.fillScreen(C_BG);
+    const int W = lcd.width();
 
     // ── Header bar ──────────────────────────────────────────
-    lcd.fillRect(0, 0, SCREEN_W, 28, C_HEAD);
+    lcd.fillRect(0, 0, W, 28, C_HEAD);
     lcd.setTextColor(C_BG, C_HEAD);
     lcd.setTextSize(1);
     lcd.setCursor(6, 10);
@@ -159,7 +168,7 @@ void uiDashboard(const UsageData& data, unsigned long lastFetchMs, int rssi) {
     unsigned long ago = (millis() - lastFetchMs) / 1000;
     char hdr[24];
     snprintf(hdr, sizeof(hdr), "%lus %ddBm", ago, rssi);
-    lcd.setCursor(SCREEN_W - (int)strlen(hdr) * 6 - 6, 10);
+    lcd.setCursor(W - (int)strlen(hdr) * 6 - 6, 10);
     lcd.print(hdr);
 
     if (!data.ok) {
@@ -176,7 +185,7 @@ void uiDashboard(const UsageData& data, unsigned long lastFetchMs, int rssi) {
         return;
     }
 
-    int barW = SCREEN_W - 20;
+    int barW = W - 20;
 
     // ── 5-hour section ──────────────────────────────────────
     // drawBar: label at y, bar at y+12, bar bottom at y+12+bh = 36+12+18 = 66
@@ -196,7 +205,7 @@ void uiDashboard(const UsageData& data, unsigned long lastFetchMs, int rssi) {
     lcd.print(h5rst);
 
     // ── Divider ─────────────────────────────────────────────
-    lcd.drawFastHLine(10, 104, SCREEN_W - 20, C_BAR_BG);
+    lcd.drawFastHLine(10, 104, W - 20, C_BAR_BG);
 
     // ── 7-day section ───────────────────────────────────────
     // bar bottom at 112+12+18 = 142
@@ -216,7 +225,7 @@ void uiDashboard(const UsageData& data, unsigned long lastFetchMs, int rssi) {
     lcd.print(d7rst);
 
     // ── Footer ──────────────────────────────────────────────
-    lcd.drawFastHLine(10, 188, SCREEN_W - 20, C_BAR_BG);
+    lcd.drawFastHLine(10, 188, W - 20, C_BAR_BG);
     lcd.setTextColor(C_DARK, C_BG);
     lcd.setTextSize(1);
     lcd.setCursor(10, 196);

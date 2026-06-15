@@ -6,15 +6,26 @@
 #define MAX_POLL_SEC            300
 
 // ── Security ─────────────────────────────────────────────
-// Key is derived from device MAC (no PIN — SmallTV Ultra has no buttons).
-// Reduced from 10000: ESP8266 is ~10x slower than ESP32 at SHA-256.
+// Key is derived from device MAC (no PIN — these devices have no buttons).
+// ESP8266 is ~10x slower than ESP32 at SHA-256, so it uses fewer rounds.
+#if defined(ESP32)
+#define KDF_ROUNDS              10000
+#else
 #define KDF_ROUNDS              1000
+#endif
 
 // ── Display ──────────────────────────────────────────────
-#define SCREEN_W                240
+#if defined(BOARD_CYD)
+#define SCREEN_W                240   // ST7789 240x320, portrait
+#define SCREEN_H                320
+#define SCREEN_ROT              0
+#else
+#define SCREEN_W                240   // SmallTV Ultra ST7789 240x240
 #define SCREEN_H                240
 #define SCREEN_ROT              0
+#endif
 #define DEFAULT_BRIGHTNESS      2   // 0=off 1=dim 2=normal 3=bright
+#define DEFAULT_ROTATION        SCREEN_ROT   // TFT_eSPI rotation 0-3
 
 // ── Network ──────────────────────────────────────────────
 #define WIFI_CONNECT_TIMEOUT_S  20
