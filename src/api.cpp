@@ -74,9 +74,11 @@ bool fetchUsage(const char* token, UsageData& out) {
     String d7u = https.header("anthropic-ratelimit-unified-7d-utilization");
     String d7r = https.header("anthropic-ratelimit-unified-7d-reset");
 
-    // Non-200 or no rate-limit headers: capture the API error body so the real
-    // reason is visible on screen and serial, instead of a vague "auth_failed".
-    if (code != 200 || (h5u.length() == 0 && d7u.length() == 0)) {
+    // Use the usage headers whenever they're present — even on a 429. Being
+    // rate-limited just means the window is full (utilization ~100%), not that
+    // anything failed. Only a response with NO usage headers (e.g. 401 auth
+    // error) is a real error; capture its body so the reason is visible.
+    if (h5u.length() == 0 && d7u.length() == 0) {
         String resp = https.getString();
         https.end();
         Serial.printf("[API] error %d body: %s\n", code, resp.c_str());
